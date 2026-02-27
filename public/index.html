@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RecipeRank Pro — AI SEO for Food Bloggers</title>
+  <style>
+    :root {
+      --primary: #E8642A;
+      --primary-dark: #C04E1A;
+      --bg: #FDFAF6;
+      --card: #FFFFFF;
+      --text: #2C2C2C;
+      --muted: #6B6B6B;
+      --border: #EAE0D5;
+      --success: #2D7D46;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Georgia', serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+    .header { background: linear-gradient(135deg, #E8642A 0%, #C04E1A 100%); color: white; padding: 48px 24px 40px; text-align: center; }
+    .header h1 { font-size: 2.4rem; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 8px; }
+    .header p { font-size: 1.1rem; opacity: 0.9; font-family: Arial, sans-serif; max-width: 520px; margin: 0 auto 16px; }
+    .badge { display: inline-block; background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); border-radius: 20px; padding: 4px 14px; font-size: 0.85rem; font-family: Arial, sans-serif; }
+    .container { max-width: 820px; margin: 0 auto; padding: 40px 24px; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 32px; margin-bottom: 24px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+    .card h2 { font-size: 1.3rem; margin-bottom: 20px; }
+    .input-group { display: flex; flex-direction: column; gap: 12px; }
+    .url-input { width: 100%; padding: 14px 18px; font-size: 1rem; border: 2px solid var(--border); border-radius: 10px; font-family: Arial, sans-serif; transition: border-color 0.2s; outline: none; }
+    .url-input:focus { border-color: var(--primary); }
+    .divider { text-align: center; color: var(--muted); font-family: Arial, sans-serif; font-size: 0.9rem; }
+    textarea.url-input { height: 120px; resize: vertical; }
+    .btn-analyze { width: 100%; padding: 16px; background: var(--primary); color: white; border: none; border-radius: 10px; font-size: 1.1rem; font-family: Arial, sans-serif; font-weight: 700; cursor: pointer; transition: background 0.2s; }
+    .btn-analyze:hover { background: var(--primary-dark); }
+    .btn-analyze:disabled { background: #CCC; cursor: not-allowed; }
+    .free-badge { text-align: center; font-family: Arial, sans-serif; font-size: 0.85rem; color: var(--muted); margin-top: 8px; }
+    .loading { display: none; text-align: center; padding: 32px; font-family: Arial, sans-serif; color: var(--muted); }
+    .spinner { display: inline-block; width: 32px; height: 32px; border: 3px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 12px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .results { display: none; }
+    .recipe-title { font-size: 1.4rem; font-weight: 700; margin-bottom: 20px; }
+    .tabs { display: flex; gap: 4px; background: var(--bg); border-radius: 10px; padding: 4px; margin-bottom: 20px; flex-wrap: wrap; }
+    .tab-btn { flex: 1; padding: 8px 12px; border: none; background: transparent; border-radius: 8px; cursor: pointer; font-family: Arial, sans-serif; font-size: 0.88rem; color: var(--muted); transition: all 0.2s; white-space: nowrap; }
+    .tab-btn.active { background: white; color: var(--text); font-weight: 600; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .output-block { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 20px; position: relative; margin-bottom: 16px; }
+    .output-label { font-size: 0.78rem; font-family: Arial, sans-serif; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 10px; }
+    .output-text { font-family: Arial, sans-serif; font-size: 0.92rem; line-height: 1.65; white-space: pre-wrap; word-break: break-word; max-height: 340px; overflow-y: auto; }
+    .copy-btn { position: absolute; top: 12px; right: 12px; background: var(--primary); color: white; border: none; border-radius: 6px; padding: 5px 10px; font-size: 0.78rem; font-family: Arial, sans-serif; cursor: pointer; font-weight: 600; transition: background 0.2s; }
+    .copy-btn:hover { background: var(--primary-dark); }
+    .copy-btn.copied { background: var(--success); }
+    .keywords-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+    .keyword-chip { background: #FFF0E8; border: 1px solid #FBBF8A; border-radius: 20px; padding: 5px 14px; font-family: Arial, sans-serif; font-size: 0.85rem; color: var(--primary-dark); }
+    .social-item { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 16px; position: relative; margin-bottom: 12px; }
+    .social-platform { font-size: 0.78rem; font-family: Arial, sans-serif; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px; }
+    .social-text { font-family: Arial, sans-serif; font-size: 0.9rem; line-height: 1.5; padding-right: 70px; }
+    .error-card { background: #FFF5F5; border: 1px solid #FFCDD2; border-radius: 12px; padding: 20px; display: none; font-family: Arial, sans-serif; margin-bottom: 16px; }
+    .error-card p { color: #C62828; }
+    .upgrade-card { background: linear-gradient(135deg, #E8642A 0%, #C04E1A 100%); border-radius: 16px; padding: 32px; text-align: center; color: white; margin-top: 8px; }
+    .upgrade-card h3 { font-size: 1.5rem; margin-bottom: 8px; }
+    .upgrade-card p { font-family: Arial, sans-serif; opacity: 0.9; font-size: 0.95rem; }
+    .price { font-size: 2rem; font-weight: 700; margin: 8px 0 4px; }
+    .price span { font-size: 1rem; opacity: 0.85; }
+    .features-list { font-family: Arial, sans-serif; font-size: 0.9rem; opacity: 0.9; margin: 12px 0 20px; list-style: none; }
+    .features-list li::before { content: "\2713  "; font-weight: 700; }
+    .features-list li { margin-bottom: 4px; }
+    .btn-upgrade { display: inline-block; background: white; color: var(--primary); padding: 14px 32px; border-radius: 10px; text-decoration: none; font-family: Arial, sans-serif; font-weight: 700; font-size: 1rem; }
+    footer { text-align: center; padding: 24px; font-family: Arial, sans-serif; font-size: 0.82rem; color: var(--muted); }
+    footer a { color: var(--primary); }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>RecipeRank Pro</h1>
+    <p>Turn any recipe into a complete SEO package in 30 seconds. Blog post, schema markup, social captions — done.</p>
+    <span class="badge">3 free analyses per day — no signup required</span>
+  </div>
+  <div class="container">
+    <div class="card">
+      <h2>Paste your recipe URL or text</h2>
+      <div class="input-group">
+        <input type="url" class="url-input" id="recipeUrl" placeholder="https://yourblog.com/your-recipe-post" />
+        <div class="divider">— or paste recipe text directly —</div>
+        <textarea class="url-input" id="recipeText" placeholder="Recipe Name&#10;&#10;Ingredients:&#10;1 cup flour, 2 eggs...&#10;&#10;Instructions:&#10;1. Preheat oven..."></textarea>
+        <button class="btn-analyze" id="analyzeBtn" onclick="analyzeRecipe()">Generate SEO Package</button>
+        <p class="free-badge">Free: 3 analyses/day &nbsp;·&nbsp; No signup &nbsp;·&nbsp; Results in ~15 seconds</p>
+      </div>
+    </div>
+    <div class="error-card" id="errorCard"><p id="errorMsg"></p></div>
+    <div class="loading" id="loading">
+      <div class="spinner"></div>
+      <p>Analyzing recipe and generating your SEO package...</p>
+      <p style="font-size:0.85rem;margin-top:6px;">Writing blog post, schema markup &amp; social captions</p>
+    </div>
+    <div class="results" id="results">
+      <div class="card">
+        <div class="recipe-title" id="recipeTitle"></div>
+        <div class="tabs">
+          <button class="tab-btn active" onclick="switchTab('blog', this)">Blog Post</button>
+          <button class="tab-btn" onclick="switchTab('meta', this)">Meta Tags</button>
+          <button class="tab-btn" onclick="switchTab('schema', this)">Schema</button>
+          <button class="tab-btn" onclick="switchTab('social', this)">Social</button>
+          <button class="tab-btn" onclick="switchTab('keywords', this)">Keywords</button>
+        </div>
+        <div id="tab-blog" class="tab-content active">
+          <div class="output-block">
+            <div class="output-label">SEO Blog Post (900-1100 words)</div>
+            <button class="copy-btn" onclick="copyEl('blogPost', this)">Copy</button>
+            <div class="output-text" id="blogPost"></div>
+          </div>
+        </div>
+        <div id="tab-meta" class="tab-content">
+          <div class="output-block">
+            <div class="output-label">Meta Title</div>
+            <button class="copy-btn" onclick="copyEl('metaTitle', this)">Copy</button>
+            <div class="output-text" id="metaTitle"></div>
+          </div>
+          <div class="output-block">
+            <div class="output-label">Meta Description</div>
+            <button class="copy-btn" onclick="copyEl('metaDesc', this)">Copy</button>
+            <div class="output-text" id="metaDesc"></div>
+          </div>
+          <div class="output-block">
+            <div class="output-label">Primary Keyword</div>
+            <button class="copy-btn" onclick="copyEl('primaryKw', this)">Copy</button>
+            <div class="output-text" id="primaryKw"></div>
+          </div>
+        </div>
+        <div id="tab-schema" class="tab-content">
+          <div class="output-block">
+            <div class="output-label">Schema.org JSON-LD (paste in &lt;head&gt;)</div>
+            <button class="copy-btn" onclick="copyEl('schemaOut', this)">Copy</button>
+            <div class="output-text" id="schemaOut" style="font-family:monospace;font-size:0.82rem;"></div>
+          </div>
+        </div>
+        <div id="tab-social" class="tab-content">
+          <div id="socialGrid"></div>
+        </div>
+        <div id="tab-keywords" class="tab-content">
+          <p style="font-family:Arial;font-size:0.9rem;color:var(--muted);margin-bottom:12px;">Use in blog post body, alt text, and Pinterest descriptions:</p>
+          <div class="keywords-grid" id="keywordsGrid"></div>
+        </div>
+      </div>
+    </div>
+    <div class="upgrade-card" id="upgradeCard" style="display:none;">
+      <h3>Upgrade to RecipeRank Pro</h3>
+      <div class="price">$29 <span>/month</span></div>
+      <ul class="features-list">
+        <li>Unlimited recipe analyses</li>
+        <li>Bulk processing (10 recipes at once)</li>
+        <li>WordPress copy-paste export</li>
+        <li>Mediavine &amp; Raptive schema optimization</li>
+        <li>Priority email support</li>
+      </ul>
+      <a href="mailto:troy@reciperank.pro?subject=RecipeRank Pro - I want to subscribe&body=Hi, I'd like to subscribe to RecipeRank Pro for $29/month. My blog URL is: " class="btn-upgrade">Get Unlimited Access — $29/mo</a>
+    </div>
+    <footer>RecipeRank Pro &copy; 2026 &nbsp;·&nbsp; Built for food bloggers who care about SEO &nbsp;·&nbsp; <a href="mailto:troy@reciperank.pro">troy@reciperank.pro</a></footer>
+  </div>
+  <script>
+    async function analyzeRecipe() {
+      const url = document.getElementById('recipeUrl').value.trim();
+      const text = document.getElementById('recipeText').value.trim();
+      if (!url && !text) { showError('Please enter a recipe URL or paste your recipe text.'); return; }
+      document.getElementById('errorCard').style.display = 'none';
+      document.getElementById('results').style.display = 'none';
+      document.getElementById('upgradeCard').style.display = 'none';
+      document.getElementById('loading').style.display = 'block';
+      document.getElementById('analyzeBtn').disabled = true;
+      try {
+        const res = await fetch('/api/analyze', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(url ? { url } : { recipe_text: text })
+        });
+        const json = await res.json();
+        if (!res.ok) {
+          showError(json.message || 'Analysis failed.');
+          if (res.status === 429) document.getElementById('upgradeCard').style.display = 'block';
+          return;
+        }
+        renderResults(json.data);
+        document.getElementById('upgradeCard').style.display = 'block';
+      } catch (e) { showError('Network error. Please try again.'); }
+      finally { document.getElementById('loading').style.display = 'none'; document.getElementById('analyzeBtn').disabled = false; }
+    }
+    function renderResults(data) {
+      document.getElementById('recipeTitle').textContent = 'SEO Package: ' + data.recipe.title;
+      document.getElementById('blogPost').textContent = data.seo.blog_post || '';
+      document.getElementById('metaTitle').textContent = data.seo.meta_title || '';
+      document.getElementById('metaDesc').textContent = data.seo.meta_description || '';
+      document.getElementById('primaryKw').textContent = data.seo.primary_keyword || '';
+      document.getElementById('schemaOut').textContent = '<script type="application/ld+json">\n' + JSON.stringify(data.seo.schema_json_ld, null, 2) + '\n<\/script>';
+      const sg = document.getElementById('socialGrid'); sg.innerHTML = '';
+      const platforms = [['instagram','Instagram'],['pinterest','Pinterest'],['twitter','Twitter/X'],['facebook','Facebook'],['tiktok','TikTok']];
+      platforms.forEach(([k, label]) => {
+        const id = 'soc_' + k;
+        sg.innerHTML += '<div class="social-item"><div class="social-platform">' + label + '</div><div class="social-text" id="' + id + '">' + (data.seo.social_captions?.[k] || '') + '</div><button class="copy-btn" onclick="copyEl(\'' + id + '\', this)">Copy</button></div>';
+      });
+      const kg = document.getElementById('keywordsGrid'); kg.innerHTML = '';
+      (data.seo.lsi_keywords || []).forEach(kw => { kg.innerHTML += '<span class="keyword-chip">' + kw + '</span>'; });
+      document.getElementById('results').style.display = 'block';
+      document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+    }
+    function switchTab(tab, btn) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+      document.getElementById('tab-' + tab).classList.add('active');
+      btn.classList.add('active');
+    }
+    function copyEl(id, btn) {
+      navigator.clipboard.writeText(document.getElementById(id).textContent).then(() => {
+        btn.textContent = 'Copied!'; btn.classList.add('copied');
+        setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+      });
+    }
+    function showError(msg) {
+      document.getElementById('errorMsg').textContent = msg;
+      document.getElementById('errorCard').style.display = 'block';
+    }
+    document.getElementById('recipeUrl').addEventListener('keypress', e => { if (e.key === 'Enter') analyzeRecipe(); });
+  </script>
+</body>
+</html>
